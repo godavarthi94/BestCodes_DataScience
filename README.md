@@ -136,3 +136,52 @@ For n_clusters = 2, silhouette score is 0.3482961119644963
 For n_clusters = 3, silhouette score is 0.30320523814626266
 For are observing that cluster 2 has maximum silhouette score. Hence, we will be grouping data into 2 clusters.
 
+# Decision Tree classifier
+from sklearn.tree import DecisionTreeClassifier
+model = DecisionTreeClassifier()
+# Model Fitting
+model.fit(X_train, y_train)
+DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=None,
+                       max_features=None, max_leaf_nodes=None,
+                       min_impurity_decrease=0.0, min_impurity_split=None,
+                       min_samples_leaf=1, min_samples_split=2,
+                       min_weight_fraction_leaf=0.0, presort=False,
+                       random_state=None, splitter='best')
+predicted = model.predict(X_test)
+# max_depth of tree
+Let us consider max_depth from 0 to 100.
+
+from sklearn.metrics import accuracy_score
+max_depths = np.linspace(1,100,100, endpoint=True)
+
+train_results= []
+test_results = []
+
+for max_depth in max_depths:
+    dt = DecisionTreeClassifier(max_depth=max_depth)
+    dt.fit(X_train, y_train)
+    
+    train_pred = dt.predict(X_train)
+    
+    acc_score_train = accuracy_score(y_train,train_pred)
+    
+    # Add accuracy score to train results
+    train_results.append(acc_score_train)
+    y_pred = dt.predict(X_test)
+    
+    acc_score_test = accuracy_score(y_test, y_pred)
+    # Add accuracy score to test results
+    test_results.append(acc_score_test)
+    
+from matplotlib.legend_handler import HandlerLine2D
+
+line1, = plt.plot(max_depths, train_results, 'b', label='Train data')
+line2, = plt.plot(max_depths, test_results, 'r', label='Test data')
+
+plt.legend(handler_map = {line1 : HandlerLine2D(numpoints=2)})
+
+plt.ylabel("Accuracy Score")
+plt.xlabel("Size of tree(Number of nodes)")
+plt.show()
+From the above results , we see that the test accuracy is declining as the depth size is increasing so can say they the model is overfitting as the depth of the tree increases.
+    
