@@ -25,10 +25,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
-# Algorithm 
+
 
 from sklearn.svm import SVC, LinearSVC
-Getting the data
+# Getting the data
 kidney_data = pd.read_csv('E:\Data Tales Dataset\kidney_disease.csv')
 pd.set_option('display.max_columns',30)
 kidney_data.head()
@@ -38,7 +38,7 @@ id	age	bp	sg	al	su	rbc	pc	pcc	ba	bgr	bu	sc	sod	pot	hemo	pcv	wc	rc	htn	dm	cad	app
 2	2	62.0	80.0	1.010	2.0	3.0	normal	normal	notpresent	notpresent	423.0	53.0	1.8	NaN	NaN	9.6	31	7500	NaN	no	yes	no	poor	no	yes	ckd
 3	3	48.0	70.0	1.005	4.0	0.0	normal	abnormal	present	notpresent	117.0	56.0	3.8	111.0	2.5	11.2	32	6700	3.9	yes	no	no	poor	yes	yes	ckd
 4	4	51.0	80.0	1.010	2.0	0.0	normal	normal	notpresent	notpresent	106.0	26.0	1.4	NaN	NaN	11.6	35	7300	4.6	no	no	no	good	no	no	ckd
-Understanding the Attributes
+# Understanding the Attributes
 age - age of patient
 bp - blood pressure level of patient
 sg - Specific gravity is the ratio of the density of the substance to the density of a reference substance.
@@ -65,6 +65,7 @@ pe - Pedal Edema( It is the accumulation of fluid in the feet and lower legs. )
 ane - Anemia (A condition in which there is a deficiency of red cells or of haemoglobin in the blood, resulting in pallor and weariness.)
 classification- It classifies whether a person is suffering from chronic kidney disease or not.
 Data Types of the data
+# Data Info
 kidney_data.info()
 <class 'pandas.core.frame.DataFrame'>
 RangeIndex: 400 entries, 0 to 399
@@ -97,10 +98,10 @@ ane               399 non-null object
 classification    400 non-null object
 dtypes: float64(11), int64(1), object(14)
 memory usage: 81.3+ KB
-Categorical and Numerical Variables
+# Categorical and Numerical Variables
 Categorical variable : rbc, pc, pcc, ba, pcv, wc, rc, htn, dm, cad, appet, pe, ane and classification
 Numerical variable : age, bp , sg, al, su, bgr, bu, sc, sod, pot and hemo.
-Data Description
+# Data Description
 kidney_data.describe()
 id	age	bp	sg	al	su	bgr	bu	sc	sod	pot	hemo
 count	400.000000	391.000000	388.000000	353.000000	354.000000	351.000000	356.000000	381.000000	383.000000	313.000000	312.000000	348.000000
