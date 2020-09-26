@@ -1,0 +1,378 @@
+Clustering Code
+Understanding Clustering through a dataset called "World Happiness Report".
+
+World Happiness Report
+The dataset which we have choosen is the 2017 Happiness dataset. This dataset gives the happiness rank and happiness score of 155 countries around the world based on several factors including family, life expectancy, economy, generosity, trust in government, freedom and dystopia residual. Sum of the value of these seven factors gives us the happiness score and the higher the happiness score, the lower the happiness rank. So, it is evident that the higher value of each of these seven factors means the level of happiness is higher. We can define the meaning of these factors as the extent to which these factors lead to happiness.
+
+Dystopia is the opposite of utopia and has the lowest happiness level. Dystopia will be considered as a reference for other countries to show how far they are from being the poorest country regarding happiness level.
+
+The dataset can be downloaded from :- https://www.kaggle.com/unsdsn/world-happiness
+
+Problem Statement
+The aim of this dataset is to predict which factors are more important to live a happier life. This would help the people and countries to focus on the significant factors to achieve a higher happiness level.
+
+Importing Libraries
+# Linear Algebra
+import numpy as np
+
+# Data Processing
+import pandas as pd
+
+# Data Visualization
+import matplotlib.pyplot as plt
+%matplotlib inline
+import seaborn as sns
+import warnings
+warnings.filterwarnings('ignore')
+import chart_studio.plotly as py # For World map
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.offline import init_notebook_mode
+import plotly.offline as py
+init_notebook_mode(connected=True)
+
+
+# Algorithm
+from scipy import cluster as svc
+Collecting data
+happiness_data = pd.read_csv(r'C:\Users\Dad\Desktop\course\course\data\2017.csv')
+happiness_data.head()
+Country	Happiness.Rank	Happiness.Score	Whisker.high	Whisker.low	Economy..GDP.per.Capita.	Family	Health..Life.Expectancy.	Freedom	Generosity	Trust..Government.Corruption.	Dystopia.Residual
+0	Norway	1	7.537	7.594445	7.479556	1.616463	1.533524	0.796667	0.635423	0.362012	0.315964	2.277027
+1	Denmark	2	7.522	7.581728	7.462272	1.482383	1.551122	0.792566	0.626007	0.355280	0.400770	2.313707
+2	Iceland	3	7.504	7.622030	7.385970	1.480633	1.610574	0.833552	0.627163	0.475540	0.153527	2.322715
+3	Switzerland	4	7.494	7.561772	7.426227	1.564980	1.516912	0.858131	0.620071	0.290549	0.367007	2.276716
+4	Finland	5	7.469	7.527542	7.410458	1.443572	1.540247	0.809158	0.617951	0.245483	0.382612	2.430182
+Renaming Columns
+happiness_data = happiness_data.rename(columns={'Happiness.Rank' : 'Happiness_Rank',
+                               'Happiness.Score': 'Happiness_Score',
+                               'Whisker.high'   : 'Whisker_high',
+                               'Whisker.low'    : 'Whisker_low',
+                               'Economy..GDP.per.Capita.' : 'Economy-GDP_per_Capita',
+                               'Health..Life.Expectancy.' : 'Health-Life_Expectancy',
+                               'Trust..Government.Corruption.' : 'Trust-Government_Corruption',
+                               'Dystopia.Residual' : 'Dystopia_Residual'})
+happiness_data.head()
+Country	Happiness_Rank	Happiness_Score	Whisker_high	Whisker_low	Economy-GDP_per_Capita	Family	Health-Life_Expectancy	Freedom	Generosity	Trust-Government_Corruption	Dystopia_Residual
+0	Norway	1	7.537	7.594445	7.479556	1.616463	1.533524	0.796667	0.635423	0.362012	0.315964	2.277027
+1	Denmark	2	7.522	7.581728	7.462272	1.482383	1.551122	0.792566	0.626007	0.355280	0.400770	2.313707
+2	Iceland	3	7.504	7.622030	7.385970	1.480633	1.610574	0.833552	0.627163	0.475540	0.153527	2.322715
+3	Switzerland	4	7.494	7.561772	7.426227	1.564980	1.516912	0.858131	0.620071	0.290549	0.367007	2.276716
+4	Finland	5	7.469	7.527542	7.410458	1.443572	1.540247	0.809158	0.617951	0.245483	0.382612	2.430182
+Most of the attributes in the data are self-explanatory.
+
+# Shape of the dataset
+happiness_data.shape
+(155, 12)
+We can see there are 155 observations and 12 features.
+
+# Columns in the data
+happiness_data.columns
+Index(['Country', 'Happiness_Rank', 'Happiness_Score', 'Whisker_high',
+       'Whisker_low', 'Economy-GDP_per_Capita', 'Family',
+       'Health-Life_Expectancy', 'Freedom', 'Generosity',
+       'Trust-Government_Corruption', 'Dystopia_Residual'],
+      dtype='object')
+Categorical and Numerical Variables
+Categorical Variable :- Country
+Numerical Variable :- Happiness_Rank, Happiness_Score, Whisker_high, Whisker_low, Economy-GDP_per_Capita, Family, Health-Life_Expectancy, Freedom, Generosity, Trust-Government_Corruption, Dystopia_Residual
+Feature Data Types
+happiness_data.dtypes
+Country                         object
+Happiness_Rank                   int64
+Happiness_Score                float64
+Whisker_high                   float64
+Whisker_low                    float64
+Economy-GDP_per_Capita         float64
+Family                         float64
+Health-Life_Expectancy         float64
+Freedom                        float64
+Generosity                     float64
+Trust-Government_Corruption    float64
+Dystopia_Residual              float64
+dtype: object
+Data Description
+happiness_data.describe()
+Happiness_Rank	Happiness_Score	Whisker_high	Whisker_low	Economy-GDP_per_Capita	Family	Health-Life_Expectancy	Freedom	Generosity	Trust-Government_Corruption	Dystopia_Residual
+count	155.000000	155.000000	155.000000	155.000000	155.000000	155.000000	155.000000	155.000000	155.000000	155.000000	155.000000
+mean	78.000000	5.354019	5.452326	5.255713	0.984718	1.188898	0.551341	0.408786	0.246883	0.123120	1.850238
+std	44.888751	1.131230	1.118542	1.145030	0.420793	0.287263	0.237073	0.149997	0.134780	0.101661	0.500028
+min	1.000000	2.693000	2.864884	2.521116	0.000000	0.000000	0.000000	0.000000	0.000000	0.000000	0.377914
+25%	39.500000	4.505500	4.608172	4.374955	0.663371	1.042635	0.369866	0.303677	0.154106	0.057271	1.591291
+50%	78.000000	5.279000	5.370032	5.193152	1.064578	1.253918	0.606042	0.437454	0.231538	0.089848	1.832910
+75%	116.500000	6.101500	6.194600	6.006527	1.318027	1.414316	0.723008	0.516561	0.323762	0.153296	2.144654
+max	155.000000	7.537000	7.622030	7.479556	1.870766	1.610574	0.949492	0.658249	0.838075	0.464308	3.117485
+Since, we see a count of 155 in all the variables . We can conclude that features aren't having missing values in them. Apart, from that we aren't observing outliers too in the dataset and the looks normalized too .
+
+# Count of missing values
+happiness_data.isnull().sum()
+Country                        0
+Happiness_Rank                 0
+Happiness_Score                0
+Whisker_high                   0
+Whisker_low                    0
+Economy-GDP_per_Capita         0
+Family                         0
+Health-Life_Expectancy         0
+Freedom                        0
+Generosity                     0
+Trust-Government_Corruption    0
+Dystopia_Residual              0
+dtype: int64
+Even the count of missing values conveys the same.
+
+Distribution of numerical features
+sns.set(rc={'figure.figsize':(24,24)}, font_scale=1.5)
+i = 1
+for column in happiness_data.select_dtypes(["int64","float64"]):
+    plt.subplot(3,4,i)
+    sns.distplot(happiness_data[column])
+    i = i + 1
+    
+plt.tight_layout()
+plt.show()
+
+We can observe a normal distribution is most of the features.
+
+Converting column "Country" to category type
+happiness_data["Country"] = happiness_data["Country"].astype("category")
+Correlation among variables
+sns.set(style="white")
+
+# Compute the correlation matrix
+corr = happiness_data.corr()
+
+# Generate a mask for the upper triangle
+mask = np.zeros_like(corr, dtype=np.bool)
+mask[np.triu_indices_from(mask)] = True
+
+# Set up the matplotlib figure
+fig, ax = plt.subplots(figsize=(10,10))
+
+# Generate a custom diverging colormap
+cmap = sns.diverging_palette(220, 10, as_cmap=True)
+
+# Draw the heatmap with the mask and correct aspect ratio
+sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0,
+           square=True, linewidths=.5, cbar_kws={"shrink":.5}, annot=True);
+plt.xticks(rotation=60)
+plt.title("CROSS CORRELATION BETWEEN PREDICTORS", fontsize=15)
+plt.show()
+
+We see that features "Whisker_high","Whisker_low","Economy-GDP_per_Capita","Family" and "Health-Life_Expectancy" being highly correlated.
+
+Visualizing of Happiness Score : Using Chloropleth feature
+fig = go.Figure(data=go.Choropleth(
+      locations=happiness_data['Country'],
+      z = happiness_data['Happiness_Score'],
+      locationmode = 'country names',
+      colorscale = 'Reds',
+      colorbar_title="Happiness Score across World",
+))
+
+fig.update_layout(
+title_text = "Happiness Index 2017",
+geo_scope='world',
+)
+
+py.iplot(fig)
+3
+4
+5
+6
+7
+Happiness Score across World
+Happiness Index 2017
+Impact of Happiness Score based on features GDP, Life-Expectancy and Government Corruption
+fig = px.scatter_3d(happiness_data, x='Economy-GDP_per_Capita', y='Health-Life_Expectancy', z='Trust-Government_Corruption',color='Happiness_Score', hover_data = ['Country'])
+fig.update_layout(height=600, width=800, title='Impact of Economy , Health and Govt. on Happiness Score across nations')
+py.iplot(fig)
+3
+3.5
+4
+4.5
+5
+5.5
+6
+6.5
+7
+7.5
+Happiness_Score
+Impact of Economy , Health and Govt. on Happiness Score across nations
+Normalizing features
+from sklearn.preprocessing import MinMaxScaler
+happiness_new_df = happiness_data.iloc[:, 2: ]
+happiness_new_df.head()
+Happiness_Score	Whisker_high	Whisker_low	Economy-GDP_per_Capita	Family	Health-Life_Expectancy	Freedom	Generosity	Trust-Government_Corruption	Dystopia_Residual
+0	7.537	7.594445	7.479556	1.616463	1.533524	0.796667	0.635423	0.362012	0.315964	2.277027
+1	7.522	7.581728	7.462272	1.482383	1.551122	0.792566	0.626007	0.355280	0.400770	2.313707
+2	7.504	7.622030	7.385970	1.480633	1.610574	0.833552	0.627163	0.475540	0.153527	2.322715
+3	7.494	7.561772	7.426227	1.564980	1.516912	0.858131	0.620071	0.290549	0.367007	2.276716
+4	7.469	7.527542	7.410458	1.443572	1.540247	0.809158	0.617951	0.245483	0.382612	2.430182
+num_cols = []
+for cols in happiness_data.select_dtypes(["int64","float64"]):
+    num_cols.append(cols)
+minmax = MinMaxScaler()
+happiness_data[num_cols] = minmax.fit_transform(happiness_data[num_cols].values)
+happiness_data.head()
+Country	Happiness_Rank	Happiness_Score	Whisker_high	Whisker_low	Economy-GDP_per_Capita	Family	Health-Life_Expectancy	Freedom	Generosity	Trust-Government_Corruption	Dystopia_Residual
+0	Norway	0.000000	1.000000	0.994201	1.000000	0.864065	0.952160	0.839045	0.965323	0.431957	0.680505	0.693215
+1	Denmark	0.006494	0.996903	0.991528	0.996514	0.792394	0.963086	0.834726	0.951019	0.423924	0.863156	0.706605
+2	Iceland	0.012987	0.993187	1.000000	0.981126	0.791458	1.000000	0.877892	0.952775	0.567420	0.330657	0.709893
+3	Switzerland	0.019481	0.991123	0.987333	0.989245	0.836545	0.941845	0.903779	0.942001	0.346686	0.790440	0.693102
+4	Finland	0.025974	0.985962	0.980138	0.986065	0.771648	0.956334	0.852200	0.938780	0.292913	0.824047	0.749120
+K-Means Clustering
+In this method, the user has to define the number of clusters. The clusters are formed based on the closeness to the center value of the clusters. Here, we decide the number of clusters(k) and then group the data points into "k" clusters.
+
+The method which allows us to seperate the data into groups and so to create clusters with similar values. To define "K" the Elbow graph will be used.
+
+from sklearn.cluster import KMeans
+value= range(1,10)
+kmeans = [KMeans(n_clusters=i) for i in value]
+
+score = [kmeans[i].fit(happiness_data.iloc[:,2:]).score(happiness_data.iloc[:,2:]) for i in range(len(kmeans))]
+plt.figure(figsize=(8,5))
+plt.plot(value, score)
+plt.xlabel("Number of Clusters")
+plt.ylabel("Score")
+plt.title("Elbow Curve")
+plt.show()
+
+We are observing multiple elbows here, i.e K=2 and K=3. However, we can consider either of the elbows. But, we will be exploring another method to get a better understanding in choosing the elbow.
+
+Silhouette Analysis
+Silhouette Analysis is a way to measure how close each point in a cluster is to the points in its neighbouring clusters. It is a neat way to find out the optimum value for k during k-means clustering. Silhouette values lies in the range of [-1,1]. A value of +1 indicates that the sample is far away from its neighboring cluster and very close to the cluster its assigned. Similarly, value of -1 indicates that the point is close to its neighboring cluster than the cluster its assigned. And, a value of 0 means its at the boundary of the distance between the two cluster. Value of +1 is ideal and -1 is least preferred. Hence, higher the value better is the cluster configuration.
+
+from sklearn.metrics import silhouette_score
+# Use silhouette score
+n_clusters = list(range(2,4))
+print("Number of clusters from 2 to 4: \n", n_clusters)
+
+for clusters in range(2,4):
+    clusterer = KMeans(n_clusters = clusters, random_state=0)
+    preds = clusterer.fit_predict(happiness_data.iloc[:,2:])
+    centers = clusterer.cluster_centers_
+    
+    score = silhouette_score(happiness_data.iloc[:,2:], preds, metric='euclidean')
+    print("For n_clusters = {}, silhouette score is {}".format(clusters,score))
+Number of clusters from 2 to 4: 
+ [2, 3]
+For n_clusters = 2, silhouette score is 0.3482961119644963
+For n_clusters = 3, silhouette score is 0.30320523814626266
+For are observing that cluster 2 has maximum silhouette score. Hence, we will be grouping data into 2 clusters.
+
+# Function to implement KMeans Clustering
+def KMeans_cluster(X, nclust):
+    model = KMeans(nclust)
+    model.fit(X)
+    clust_labels = model.predict(X)
+    cent = model.cluster_centers_
+    return(clust_labels, cent)
+clust_labels, cent = KMeans_cluster(happiness_data[num_cols], 2)
+kmeans = pd.DataFrame(clust_labels)
+happiness_data.insert((happiness_data.shape[1]),'kmeans',kmeans)
+# Plot the clusters obtained using k means
+fig = plt.figure(figsize=(6,5))
+ax = fig.add_subplot(111)
+scatter = ax.scatter(happiness_data["Economy-GDP_per_Capita"], happiness_data["Trust-Government_Corruption"], c=kmeans[0], cmap=plt.cm.get_cmap('autumn', 6))
+
+ax.set_title("K-Means Clustering")
+ax.set_xlabel("Economy-GDP_per_Capita")
+ax.set_ylabel("Govt. Corruption")
+plt.scatter(cent[:,0],cent[:,1],marker='x',color='b')
+plt.colorbar(scatter)
+plt.show()
+
+Disadvantages of K-Means Clustering
+We need to select groups/classes and this isn't always trivial.
+
+K-Means starts with a random choice of cluster centers and therefore it may yield different clustering results on different runs of algorithm.
+
+K-Means is very sensitive to outliers.
+
+Agglomerative Hierarchical Clustering
+Hierarhical clustering algorithms fall into 2 categories:- top-down or bottom-up.
+
+Bottom-up alogrithms treat each data point as a single cluster at the outset and then successively merge (or agglomerate) pairs of clusters until all clusters have been merged into a single cluster that contains all data points. Hence, it is called "Hierarchical Agglomerative Clustering". This hierarchy of clusters is represented as a tree(or dendogram).
+
+Advantages of Agglomerative Hierarcichal Clustering
+It does not require us to specify the number of clusters and we can select which number of clusters looks best while building a tree.
+
+Algorithm is not sensitive to the choice of distance metric.
+
+Knowing the clusters better by plotting Dendograms(trees)
+import scipy.cluster.hierarchy as shc
+plt.figure(figsize=(10,7))
+plt.title("Dendrograms")
+dend = shc.dendrogram(shc.linkage(happiness_data.iloc[:,2:], method="ward"))
+
+Here, x-axis contains the samples and y-axis represents the distance between these samples. The line with the maximum distance is the blue line,we can decide the threshold of 6 and cut the dendrogram.
+
+plt.figure(figsize=(10,7))
+plt.title("Dendrograms")
+dend = shc.dendrogram(shc.linkage(happiness_data.iloc[:,2:], method="ward"))
+plt.axhline(y=6, color='r', linestyle='--')
+plt.show()
+
+We can observe two clusters as the line cuts the dendrogram at the two points. Hence, we will be applying hierarchical clustering for 2 clusters.
+
+from sklearn.cluster import AgglomerativeClustering
+def Hier_cluster(X, nclust):
+    model = AgglomerativeClustering(n_clusters=nclust, affinity='euclidean', linkage="ward")
+    clust_labels = model.fit_predict(X)
+    return(clust_labels)
+cluster = Hier_cluster(happiness_data.iloc[:,2:], 2)
+agglomerative = pd.DataFrame(cluster)
+happiness_data.insert((happiness_data.shape[1]),'agglomerative',agglomerative)
+# Plot the clusters based on Agglomerative or Hierarchical clustering
+fig = plt.figure(figsize=(6,5))
+ax = fig.add_subplot(111)
+scatter = ax.scatter(happiness_data["Economy-GDP_per_Capita"], happiness_data["Trust-Government_Corruption"], c=agglomerative[0], cmap=plt.cm.get_cmap('Accent', 6))
+ax.set_title("Agglomerative or Hierarchical clustering Clustering")
+ax.set_xlabel("Economy-GDP_per_Capita")
+ax.set_ylabel("Govt. Corruption")
+plt.colorbar(scatter)
+plt.show()
+
+Visualization of countries based on the clustering results
+fig = go.Figure(data=go.Choropleth(
+      locations=happiness_data['Country'],
+      z = happiness_data['kmeans'],
+      locationmode = 'country names',
+      colorscale = 'Blues',
+      colorbar_title="Cluster Group",
+))
+
+fig.update_layout(
+title_text = "Clustering of Countries based on K-Means",
+geo_scope='world',
+)
+0
+0.2
+0.4
+0.6
+0.8
+1
+Cluster Group
+Clustering of Countries based on K-Means
+fig = go.Figure(data=go.Choropleth(
+      locations=happiness_data['Country'],
+      z = happiness_data['agglomerative'],
+      locationmode = 'country names',
+      colorscale = 'Blues',
+      colorbar_title="Cluster Group",
+))
+
+fig.update_layout(
+title_text = "Clustering of Countries based on Agglomerative",
+geo_scope='world',
+)
+0
+0.2
+0.4
+0.6
+0.8
+1
+Cluster Group
+Clustering of Countries based on Agglomerative
+Thus, we came to know the selection criteria for "K" clusters, types of clustersa and their representation.Finally, for better understanding visualizing it through graphs.
